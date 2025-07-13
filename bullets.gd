@@ -1,15 +1,12 @@
-extends CharacterBody2D
+extends RigidBody2D
 
-var pos:Vector2
-var rota:float
-var dir: float
-var speed = 2000
+var launch_power = 800.0  # You can adjust this value
 
 func _ready():
-	global_position=pos
-	global_rotation=rota
+	# Enable gravity (1.0 = normal Earth gravity)
+	gravity_scale = 1.0
 	
-
-func _physics_process(delta: float) -> void:
-	velocity=Vector2(speed,0).rotated(dir)
-	move_and_slide()
+func launch(direction: Vector2, power: float = launch_power):
+	# Apply impulse = instant force applied once
+	# direction should be normalized (length = 1)
+	apply_impulse(direction * power)
