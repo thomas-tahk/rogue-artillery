@@ -1,28 +1,33 @@
-[gd_scene load_steps=4 format=3 uid="uid://dc0k8qdt6nowy"]
+[gd_scene load_steps=5 format=3 uid="uid://dc0k8qdt6nowy"]
 
-[ext_resource type="Texture2D" uid="uid://bbe3ccug4e06h" path="res://icon.svg" id="1_ep4uk"]
 [ext_resource type="Script" path="res://src/scripts/gun.gd" id="1_q7iw2"]
+[ext_resource type="Texture2D" uid="uid://ixw64y313ll7" path="res://assets/sprites/tank.png" id="2_vy6qh"]
+[ext_resource type="PackedScene" uid="uid://k1rjtm8mnmao" path="res://src/scenes/terrain.tscn" id="3_cqtnu"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hmqf2"]
-size = Vector2(128, 127)
+size = Vector2(53, 32)
 
 [node name="Node2D" type="Node2D"]
 
 [node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+position = Vector2(2, -1)
 script = ExtResource("1_q7iw2")
 
 [node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D"]
-texture = ExtResource("1_ep4uk")
+texture = ExtResource("2_vy6qh")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
-position = Vector2(0, -0.5)
+position = Vector2(1.5, 0)
 shape = SubResource("RectangleShape2D_hmqf2")
 
 [node name="Node2D" type="Node2D" parent="CharacterBody2D"]
-position = Vector2(69, 0)
+position = Vector2(35, -4)
 
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="PowerBar" type="ProgressBar" parent="UI"]
 offset_right = 4.0
 offset_bottom = 27.0
+
+[node name="TileMapLayer" parent="." instance=ExtResource("3_cqtnu")]
+position = Vector2(575, 325)

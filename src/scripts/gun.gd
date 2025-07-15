@@ -8,6 +8,19 @@ func _ready():
 	power_bar.max_value = max_power
 	power_bar.value = min_power
 	power_bar.visible = false  # Hide until charging
+	
+	# Position at bottom center of screen
+	power_bar.anchor_left = 0.5
+	power_bar.anchor_right = 0.5
+	power_bar.anchor_top = 1.0
+	power_bar.anchor_bottom = 1.0
+	power_bar.offset_left = -100  # Half the width (200px bar)
+	power_bar.offset_right = 100
+	power_bar.offset_top = -50    # 50px from bottom
+	power_bar.offset_bottom = -20
+	
+	# Style it
+	power_bar.show_percentage = false  # Remove that % text
 
 var bullet_path=preload("res://src/scenes/bullets.tscn")
 var aim_angle = 0.0  # Angle in radians
@@ -48,7 +61,7 @@ func _physics_process(delta: float) -> void:
 
 func fire():
 	var bullet = bullet_path.instantiate()
-	bullet.global_position = $Node2D.global_position
+	bullet.global_position = $Node2D.global_position + Vector2(30, 0).rotated(aim_angle)
 	
 	# Calculate direction from angle
 	var direction = Vector2(cos(aim_angle), sin(aim_angle))
