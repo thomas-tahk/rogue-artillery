@@ -1,12 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://2ak5bel7rfwe"]
 
-[ext_resource type="Script" path="res://bullets.gd" id="1_5t4e7"]
+[ext_resource type="Script" path="res://src/scripts/bullets.gd" id="1_5t4e7"]
 [ext_resource type="Texture2D" uid="uid://dbmdqrqkntblo" path="res://assets/sprites/bullet.png" id="2_vfpbp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o5qq3"]
 size = Vector2(7.5, 4)
 
 [node name="Bullet" type="RigidBody2D"]
+contact_monitor = true
+max_contacts_reported = 10
 script = ExtResource("1_5t4e7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

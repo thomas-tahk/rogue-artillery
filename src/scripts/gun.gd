@@ -67,4 +67,18 @@ func fire():
 	var direction = Vector2(cos(aim_angle), sin(aim_angle))
 	
 	get_parent().add_child(bullet)
+	
+	# connect explosion signal
+	bullet.exploded.connect(_on_bullet_exploded)
+	
 	bullet.launch(direction, power)
+	
+func _on_bullet_exploded(explosion_pos: Vector2):
+	# call terrain destruction
+	print("Explosion signal received at: ", explosion_pos)
+	var terrain_destroyer = get_parent().get_node("TerrainDestroyer")
+	if terrain_destroyer:
+		print("TerrainDestroyer found")
+		terrain_destroyer.explode_terrain(explosion_pos, 2)
+	else:
+		print("ERROR: TerrainDestroyer not found!")
