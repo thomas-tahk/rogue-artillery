@@ -2,6 +2,10 @@ extends CharacterBody2D
 
 @onready var power_bar = $"../UI/PowerBar"
 
+@onready var angle_indicator: Line2D
+var indicator_visible: bool = true
+var is_player_turn: bool = true
+
 func _ready():
 	# Set up power bar
 	power_bar.min_value = min_power
@@ -21,6 +25,13 @@ func _ready():
 	
 	# Style it
 	power_bar.show_percentage = false  # Remove that % text
+	
+	angle_indicator = Line2D.new()
+	add_child(angle_indicator)
+	angle_indicator.width = 3
+	angle_indicator.default_color = Color.YELLOW
+	angle_indicator.z_index = 10
+	update_angle_indicator()
 
 var bullet_path=preload("res://src/scenes/bullets.tscn")
 var aim_angle = 0.0  # Angle in radians
@@ -82,3 +93,45 @@ func _on_bullet_exploded(explosion_pos: Vector2):
 		terrain_destroyer.explode_terrain(explosion_pos, 2)
 	else:
 		print("ERROR: TerrainDestroyer not found!")
+
+func update_angle_indicator():
+	if not indicator_visible or not is_player_turn:
+		angle_indicator.visible = false
+		return
+		
+	angle_indicator.visible = true
+	angle_indicator.clear_points()
+	
+	# Draw gauge arc (background)
+	var radius = 40
+	var arc_points = 9  # More points for smoother arc
+	
+	for i in range(arc_points):
+		var arc_angle_deg = -90 + (i * 20)  # -90 to +90 in 20-degree increments
+		var arc_angle_rad = deg_to_rad(arc_angle_deg)
+		var point = Vector2(cos(arc_angle_rad), sin(arc_angle_rad)) * radius
+		angle_indicator.add_point(point)
+	
+	# Add a small gap, then draw the needle
+	angle_indicator.add_point(Vector2(999, 999))  # Break in line (will appear as gap)
+	
+	# Draw needle pointing to current angle
+	var needle_angle_rad = aim_angle  # Your angle is already in radians
+	var needle_start = Vector2(cos(needle_angle_rad), sin(needle_angle_rad)) * 15
+	var needle_end = Vector2(cos(needle_angle_rad), sin(needle_angle_rad)) * (radius - 5)
+	
+	angle_indicator.add_point(needle_start)
+	angle_indicator.add_point(needle_end)
+
+# Functions to control indicator visibility (for future turn system)
+func show_angle_indicator():
+	indicator_visible = true
+	update_angle_indicator()
+
+func hide_angle_indicator():
+	indicator_visible = false
+	angle_indicator.visible = false
+
+func set_player_turn(is_turn: bool):
+	is_player_turn = is_turn
+	update_angle_indicator()

@@ -24,21 +24,21 @@
 ## 📋 Immediate To-Do List
 
 ### High Priority
-1. **Research destructible terrain methods** - Review tutorials and decide on approach
-2. **Implement basic crater creation** - Remove tiles where bullets hit
-3. **Update collision after destruction** - Ensure physics still work
-4. **Add visual effects** - Explosion particles, screen shake
+1. **Camera system** - Proper world positioning, follows projectiles during flight
+2. **Angle indicator UI** - Gauge-style indicator attached to gun, visible only during player turns
+3. **Turn system** - Basic player/enemy alternation
+4. **Visual polish** - Explosion particles, screen shake
 
 ### Medium Priority  
-1. **Camera system** - Proper world positioning, bullet tracking
-2. **Angle indicator** - Visual arrow showing aim direction
-3. **Turn system** - Basic player/enemy alternation
-4. **Enemy AI** - Simple aiming at player
+1. **Enemy AI** - Simple aiming at player
+2. **Weapon variety** - Different projectile types
+3. **Health/damage system** - Unit destruction mechanics
+4. **Win/lose conditions** - Battle end states
 
 ### Later
-1. **Weapon variety** - Different projectile types
-2. **Upgrade system** - Between-battle progression
-3. **Roguelite structure** - Campaign map, meta progression
+1. **Upgrade system** - Between-battle progression
+2. **Roguelite structure** - Campaign map, meta progression
+3. **Sound effects** - Shooting, explosions, UI feedback
 
 ## 🤔 Current Decisions Pending
 
