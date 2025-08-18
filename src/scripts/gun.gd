@@ -2,7 +2,8 @@ extends CharacterBody2D
 
 @onready var power_bar = $"../UI/PowerBar"
 
-@onready var angle_indicator: Line2D
+@onready var angle_arc: Line2D
+@onready var angle_needle: Line2D
 var indicator_visible: bool = true
 var is_player_turn: bool = true
 
@@ -26,11 +27,23 @@ func _ready():
 	# Style it
 	power_bar.show_percentage = false  # Remove that % text
 	
-	angle_indicator = Line2D.new()
-	add_child(angle_indicator)
-	angle_indicator.width = 3
-	angle_indicator.default_color = Color.YELLOW
-	angle_indicator.z_index = 10
+	# angle indicator setup via 2 line2D nodes
+	angle_arc = Line2D.new()
+	angle_needle = Line2D.new()
+	
+	add_child(angle_arc)
+	add_child(angle_needle)
+	
+	# style the needle (background gauge)
+	angle_needle.width = 3
+	angle_needle.default_color = Color.YELLOW
+	angle_needle.z_index = 10
+	
+	# style the arc (current aim direction)
+	angle_arc.width = 2
+	angle_arc.default_color = Color.WHITE
+	angle_arc.z_index = 9
+	
 	update_angle_indicator()
 
 var bullet_path=preload("res://src/scenes/bullets.tscn")
@@ -96,32 +109,33 @@ func _on_bullet_exploded(explosion_pos: Vector2):
 
 func update_angle_indicator():
 	if not indicator_visible or not is_player_turn:
-		angle_indicator.visible = false
+		angle_arc.visible = false
+		angle_needle.visible = false
 		return
 		
-	angle_indicator.visible = true
-	angle_indicator.clear_points()
+	angle_arc.visible = true
+	angle_needle.visible = true
 	
-	# Draw gauge arc (background)
-	var radius = 40
-	var arc_points = 9  # More points for smoother arc
+	# Clear both lines
+	angle_arc.clear_points()
+	angle_needle.clear_points()
+	
+	# Draw the background arc (gauge)
+	var radius = 25
+	var arc_points = 5
 	
 	for i in range(arc_points):
-		var arc_angle_deg = -90 + (i * 20)  # -90 to +90 in 20-degree increments
+		var arc_angle_deg = -90 + (i * 45)  # -90, -45, 0, 45, 90 degrees
 		var arc_angle_rad = deg_to_rad(arc_angle_deg)
 		var point = Vector2(cos(arc_angle_rad), sin(arc_angle_rad)) * radius
-		angle_indicator.add_point(point)
+		angle_arc.add_point(point)
 	
-	# Add a small gap, then draw the needle
-	angle_indicator.add_point(Vector2(999, 999))  # Break in line (will appear as gap)
+	# Draw the needle (separate line, no crazy jumps)
+	var needle_length = 20
+	var needle_tip = Vector2(cos(aim_angle), sin(aim_angle)) * needle_length
 	
-	# Draw needle pointing to current angle
-	var needle_angle_rad = aim_angle  # Your angle is already in radians
-	var needle_start = Vector2(cos(needle_angle_rad), sin(needle_angle_rad)) * 15
-	var needle_end = Vector2(cos(needle_angle_rad), sin(needle_angle_rad)) * (radius - 5)
-	
-	angle_indicator.add_point(needle_start)
-	angle_indicator.add_point(needle_end)
+	angle_needle.add_point(Vector2.ZERO)  # Start at center
+	angle_needle.add_point(needle_tip)    # End at tip
 
 # Functions to control indicator visibility (for future turn system)
 func show_angle_indicator():
@@ -130,7 +144,8 @@ func show_angle_indicator():
 
 func hide_angle_indicator():
 	indicator_visible = false
-	angle_indicator.visible = false
+	angle_arc.visible = false
+	angle_needle.visible = false
 
 func set_player_turn(is_turn: bool):
 	is_player_turn = is_turn
