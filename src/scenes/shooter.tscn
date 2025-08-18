@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://dc0k8qdt6nowy"]
+[gd_scene load_steps=7 format=3 uid="uid://dc0k8qdt6nowy"]
 
 [ext_resource type="Script" path="res://src/scripts/gun.gd" id="1_q7iw2"]
 [ext_resource type="Texture2D" uid="uid://ixw64y313ll7" path="res://assets/sprites/tank.png" id="2_vy6qh"]
 [ext_resource type="PackedScene" uid="uid://k1rjtm8mnmao" path="res://src/scenes/terrain.tscn" id="3_cqtnu"]
 [ext_resource type="Script" path="res://src/scripts/terrain_destroyer.gd" id="4_mueye"]
+[ext_resource type="Script" path="res://src/scripts/angle_indicator_ui.gd" id="5_d6vsc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hmqf2"]
 size = Vector2(53, 32)
@@ -35,3 +36,6 @@ position = Vector2(575, 325)
 
 [node name="TerrainDestroyer" type="Node" parent="."]
 script = ExtResource("4_mueye")
+
+[node name="AngleIndicatorUI" type="Node2D" parent="."]
+script = ExtResource("5_d6vsc")

@@ -1,11 +1,7 @@
 extends CharacterBody2D
 
 @onready var power_bar = $"../UI/PowerBar"
-
-@onready var angle_arc: Line2D
-@onready var angle_needle: Line2D
-var indicator_visible: bool = true
-var is_player_turn: bool = true
+@onready var angle_indicator_ui = $"../AngleIndicatorUI"
 
 func _ready():
 	# Set up power bar
@@ -27,24 +23,28 @@ func _ready():
 	# Style it
 	power_bar.show_percentage = false  # Remove that % text
 	
-	# angle indicator setup via 2 line2D nodes
-	angle_arc = Line2D.new()
-	angle_needle = Line2D.new()
+	# DEBUG: Print camera and tank positions
+	print("=== POSITION DEBUG ===")
+	print("Tank position: ", global_position)
+	print("Viewport size: ", get_viewport().size)
+	print("Viewport center: ", get_viewport().size / 2)
 	
-	add_child(angle_arc)
-	add_child(angle_needle)
+	# DEBUG: Draw a big visible marker at tank position
+	var debug_marker = Line2D.new()
+	get_parent().add_child(debug_marker)
+	debug_marker.global_position = global_position
+	debug_marker.width = 10
+	debug_marker.default_color = Color.MAGENTA
+	debug_marker.z_index = 200
+	# Draw a big X
+	debug_marker.add_point(Vector2(-100, -100))
+	debug_marker.add_point(Vector2(100, 100))
+	debug_marker.add_point(Vector2(999, 999))  # Break
+	debug_marker.add_point(Vector2(-100, 100))
+	debug_marker.add_point(Vector2(100, -100))
 	
-	# style the needle (background gauge)
-	angle_needle.width = 3
-	angle_needle.default_color = Color.YELLOW
-	angle_needle.z_index = 10
-	
-	# style the arc (current aim direction)
-	angle_arc.width = 2
-	angle_arc.default_color = Color.WHITE
-	angle_arc.z_index = 9
-	
-	update_angle_indicator()
+	if angle_indicator_ui:
+		angle_indicator_ui.setup_for_tank(self)
 
 var bullet_path=preload("res://src/scenes/bullets.tscn")
 var aim_angle = 0.0  # Angle in radians
@@ -55,14 +55,22 @@ var charging = false
 
 func _physics_process(delta: float) -> void:
 	position = get_viewport().size / 2
+	
 	# Angle control with arrow keys
 	if Input.is_action_pressed("ui_left"):
-		aim_angle -= 1.0 * delta  # Adjust speed as needed
+		aim_angle -= 1.0 * delta
+		
 	if Input.is_action_pressed("ui_right"):
 		aim_angle += 1.0 * delta
 
-	# Clamp angle (for semblance of realistic artillery limits)
+	# MOVED: Clamp angle BEFORE sending to indicator
 	aim_angle = clamp(aim_angle, -PI/2, PI/2)  # -90 to +90 degrees
+	
+	# NOW send the properly clamped angle to indicator
+	if Input.is_action_pressed("ui_left") or Input.is_action_pressed("ui_right"):
+		if angle_indicator_ui:
+			angle_indicator_ui.update_angle(aim_angle)
+	
 	# Update visual rotation
 	rotation = aim_angle
 
@@ -76,11 +84,12 @@ func _physics_process(delta: float) -> void:
 		power = min(power + 800.0 * delta, max_power)
 		power_bar.value = power
 		power_bar.visible = true
+		
 	if Input.is_action_just_released("ui_accept") and charging:
 		print("fired with %d" % power)
 		fire()
 		charging = false
-		power_bar.visible = false  # Hide after firing	
+		power_bar.visible = false
 	
 
 func fire():
@@ -106,47 +115,3 @@ func _on_bullet_exploded(explosion_pos: Vector2):
 		terrain_destroyer.explode_terrain(explosion_pos, 2)
 	else:
 		print("ERROR: TerrainDestroyer not found!")
-
-func update_angle_indicator():
-	if not indicator_visible or not is_player_turn:
-		angle_arc.visible = false
-		angle_needle.visible = false
-		return
-		
-	angle_arc.visible = true
-	angle_needle.visible = true
-	
-	# Clear both lines
-	angle_arc.clear_points()
-	angle_needle.clear_points()
-	
-	# Draw the background arc (gauge)
-	var radius = 25
-	var arc_points = 5
-	
-	for i in range(arc_points):
-		var arc_angle_deg = -90 + (i * 45)  # -90, -45, 0, 45, 90 degrees
-		var arc_angle_rad = deg_to_rad(arc_angle_deg)
-		var point = Vector2(cos(arc_angle_rad), sin(arc_angle_rad)) * radius
-		angle_arc.add_point(point)
-	
-	# Draw the needle (separate line, no crazy jumps)
-	var needle_length = 20
-	var needle_tip = Vector2(cos(aim_angle), sin(aim_angle)) * needle_length
-	
-	angle_needle.add_point(Vector2.ZERO)  # Start at center
-	angle_needle.add_point(needle_tip)    # End at tip
-
-# Functions to control indicator visibility (for future turn system)
-func show_angle_indicator():
-	indicator_visible = true
-	update_angle_indicator()
-
-func hide_angle_indicator():
-	indicator_visible = false
-	angle_arc.visible = false
-	angle_needle.visible = false
-
-func set_player_turn(is_turn: bool):
-	is_player_turn = is_turn
-	update_angle_indicator()
