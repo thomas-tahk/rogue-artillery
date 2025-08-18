@@ -1,5 +1,4 @@
-# angle_indicator_ui.gd
-# Fixed version - corrected positioning and angle clamping
+# REPLACE your angle_indicator_ui.gd with this:
 
 extends Node2D
 
@@ -11,23 +10,28 @@ var indicator_visible: bool = true
 var is_player_turn: bool = true
 var is_initialized: bool = false
 
+# Positioning controls
+var indicator_offset: Vector2 = Vector2(20, -5)  # Offset from tank center (up 40 pixels)
+var arc_radius: float = 26                       # Size of the arc
+var needle_length: float = 5                   # Length of the needle
+
 func _ready():
-	print("AngleIndicatorUI: _ready() called")
+	print("AngleIndicatorUI: Starting initialization...")
 	
-	# Create the visual components
+	# Create visual components
 	angle_arc = Line2D.new()
 	angle_needle = Line2D.new()
 	
 	add_child(angle_arc)
 	add_child(angle_needle)
 	
-	# Style the arc (shows possible range)
-	angle_arc.width = 4
+	# Style the arc - VERY VISIBLE for testing
+	angle_arc.width = 5
 	angle_arc.default_color = Color.RED
 	angle_arc.z_index = 100
 	
-	# Style the needle (shows current aim)
-	angle_needle.width = 6
+	# Style the needle - VERY VISIBLE for testing  
+	angle_needle.width = 8
 	angle_needle.default_color = Color.CYAN
 	angle_needle.z_index = 101
 	
@@ -36,45 +40,39 @@ func _ready():
 	print("AngleIndicatorUI: Initialization complete")
 
 func setup_for_tank(tank: Node2D):
-	print("AngleIndicatorUI: setup_for_tank called")
+	print("AngleIndicatorUI: setup_for_tank called with: ", tank.name)
 	tank_reference = tank
 	visible = true
 	
-	# FIXED: Set position immediately
+	# Set position immediately
 	global_position = tank_reference.global_position
-	print("AngleIndicatorUI: Set position to: ", global_position)
+	print("AngleIndicatorUI: Positioned at: ", global_position)
 	
 	if is_initialized:
 		update_display()
 
 func update_angle(new_angle: float):
-	# FIXED: Clamp the angle to prevent crazy values
 	current_angle = clamp(new_angle, -PI/2, PI/2)
-	print("AngleIndicatorUI: update_angle - input: ", rad_to_deg(new_angle), " clamped: ", rad_to_deg(current_angle))
-	
 	if is_initialized:
 		update_display()
 
 func _process(_delta):
 	if tank_reference and visible:
-		# FIXED: Always keep synced with tank position
-		var new_pos = tank_reference.global_position
-		if global_position != new_pos:
-			global_position = new_pos
-			print("AngleIndicatorUI: Position updated to: ", global_position)
+		update_position()
+		
+func update_position():
+	"""Position the indicator relative to the tank with offset"""
+	if tank_reference:
+		global_position = tank_reference.global_position + indicator_offset
 
 func update_display():
 	if not is_initialized or not angle_arc or not angle_needle:
-		print("AngleIndicatorUI: update_display - not ready")
 		return
 		
 	if not indicator_visible or not is_player_turn:
-		print("AngleIndicatorUI: update_display - hiding")
 		angle_arc.visible = false
 		angle_needle.visible = false
 		return
-	
-	print("AngleIndicatorUI: update_display - drawing at position: ", global_position)
 	
 	angle_arc.visible = true
 	angle_needle.visible = true
@@ -83,23 +81,34 @@ func update_display():
 	angle_arc.clear_points()
 	angle_needle.clear_points()
 	
-	# Draw arc
-	var radius = 50
+	# Draw arc - BIGGER for visibility
 	var arc_points = 5
 	
 	for i in range(arc_points):
-		var arc_angle_deg = -90 + (i * 45)
+		var arc_angle_deg = -90 + (i * 45)  # -90, -45, 0, 45, 90
 		var arc_angle_rad = deg_to_rad(arc_angle_deg)
-		var point = Vector2(cos(arc_angle_rad), sin(arc_angle_rad)) * radius
+		var point = Vector2(cos(arc_angle_rad), sin(arc_angle_rad)) * arc_radius
 		angle_arc.add_point(point)
 	
-	# Draw needle with CLAMPED angle
+	# Draw needle - BIGGER for visibility
 	var needle_length = 40
 	var needle_tip = Vector2(cos(current_angle), sin(current_angle)) * needle_length
 	
 	angle_needle.add_point(Vector2.ZERO)
 	angle_needle.add_point(needle_tip)
-	print("AngleIndicatorUI: Needle angle: ", rad_to_deg(current_angle), " tip at: ", needle_tip)
+
+func set_indicator_offset(offset: Vector2):
+	"""Move the indicator relative to tank (e.g., Vector2(0, -50) = 50 pixels above tank)"""
+	indicator_offset = offset
+	if tank_reference:
+		update_position()
+
+func set_indicator_size(radius: float, needle_len: float):
+	"""Change the size of the arc and needle"""
+	arc_radius = radius
+	needle_length = needle_len
+	if is_initialized:
+		update_display()
 
 func show_indicator():
 	indicator_visible = true
