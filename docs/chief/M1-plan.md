@@ -17,7 +17,7 @@ Coordinates: Godot pixels, y down. World = rectangle from (0,0) to terrain size.
 | `src/scripts/battle.gd` (`src/scenes/battle.tscn`, the main scene) | `Battle` | owns Terrain, two Tanks, Camera2D (static, frames whole world), HUD; turn loop; `@export var player_is_ai := false` (autoplay for tests); `@export var battle_seed := 0` (0 = random); `signal battle_ended(player_won: bool)` |
 | `src/scripts/hud.gd` on `CanvasLayer` | `Hud` | `set_turn(text)` · `set_aim(deg, power)` · `set_wind(strength: int)` (arrow + number) · `set_fuel(fuel)` · `show_result(player_won: bool)` · always-visible key legend |
 
-Tuning defaults: world 100×40 tiles (1600×640 px); surface between 40–75 % of height; flat spawn pads at x≈15 % / 85 %. Wind = integer −10..10, re-rolled each turn. Explosion radius 40 px; damage = 50 × (1 − d / (40 + 16)) clamped ≥ 0, d = distance from blast to tank centre; direct hit = 50. Tank falls below the world → dies.
+Tuning defaults: world 100×40 tiles (1600×640 px); surface between 40–75 % of height; flat spawn pads at x≈15 % / 85 %. Wind = integer −10..10, re-rolled each turn. Explosion radius 40 px; damage = 50 × (1 − d / (40 + 16)) clamped ≥ 0, d = distance from blast to tank centre; direct hit = 50. Tank falls below the world → dies. **Shooter exclusion:** for each shot Battle builds one `is_hit` Callable = terrain solid OR inside the *opponent's* box (never the shooter's), and passes that same Callable to `EnemyAI.is_hit` and `Projectile.setup`, so prediction and flight agree. Self-damage still applies through the blast radius. Leaving through the top of the world is not out (`Ballistics.is_out` checks left/right/bottom only).
 
 ## Controls (M1)
 ← / → drive (fuel-limited) · ↑ / ↓ angle · W / S power · Space fire · R new battle.
@@ -25,8 +25,8 @@ Tuning defaults: world 100×40 tiles (1600×640 px); surface between 40–75 % o
 ## Issues
 | # | Issue | Specialist | Blocked by |
 |---|---|---|---|
-| 1 | Procedural destructible terrain | backend-engineer | — |
-| 2 | Deterministic projectile + ballistics + enemy aim solver | backend-engineer | — |
-| 3 | Tank unit (HP, gravity, driving, aim/power, HP bar) | backend-engineer | — |
-| 4 | CI: tests + Web build published to GitHub Pages per branch | general-build-helper | — |
-| 5 | Battle loop: turns, wind, damage, win/lose, restart, HUD; new main scene | frontend-engineer | 1, 2, 3 |
+| #2 | Procedural destructible terrain | backend-engineer | — |
+| #3 | Deterministic projectile + ballistics + enemy aim solver | backend-engineer | — |
+| #4 | Tank unit (HP, gravity, driving, aim/power, HP bar) | backend-engineer | — |
+| #5 | CI: tests + Web build published to GitHub Pages per branch | general-build-helper | — |
+| #6 | Battle loop: turns, wind, damage, win/lose, restart, HUD; new main scene | frontend-engineer | #2, #3, #4 |
