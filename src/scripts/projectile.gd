@@ -9,6 +9,7 @@ var wind_accel := 0.0
 var is_hit: Callable
 var bounds := Rect2()
 var _done := false
+var _frames := 0
 
 
 func setup(start: Vector2, start_velocity: Vector2, config: Dictionary) -> void:
@@ -20,28 +21,37 @@ func setup(start: Vector2, start_velocity: Vector2, config: Dictionary) -> void:
 	rotation = velocity.angle()
 
 
-func _physics_process(delta: float) -> void:
-	advance(delta)
+func _physics_process(_delta: float) -> void:
+	advance()
 
 
-func advance(dt: float) -> void:
+## One fixed Ballistics.FRAME_DT frame (physics delta ignored → matches first_hit exactly).
+func advance() -> void:
 	if _done:
 		return
-	var n := Ballistics.substeps(velocity, dt)
+	var n := Ballistics.substeps(velocity, Ballistics.FRAME_DT)
 	for i in n:
-		var s := Ballistics.step(position, velocity, wind_accel, dt / n)
+		var s := Ballistics.step(position, velocity, wind_accel, Ballistics.FRAME_DT / n)
 		position = s[0]
 		velocity = s[1]
 		if _finish_if_landed():
 			return
+	_frames += 1
+	if _frames >= Ballistics.MAX_FLIGHT_FRAMES:
+		_finish(false)
+		return
 	rotation = velocity.angle()
 
 
 func _finish_if_landed() -> bool:
-	var left_bounds := not bounds.has_point(position)
-	if not left_bounds and not is_hit.call(position):
+	var out := Ballistics.is_out(position, bounds)
+	if not out and not is_hit.call(position):
 		return false
-	_done = true
-	landed.emit(position, not left_bounds)
-	queue_free()
+	_finish(not out)
 	return true
+
+
+func _finish(exploded: bool) -> void:
+	_done = true
+	landed.emit(position, exploded)
+	queue_free()

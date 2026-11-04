@@ -21,7 +21,7 @@ func _ai(error_px: float, seed_value: int = 1) -> EnemyAI:
 
 func _land(ai: EnemyAI, from: Vector2, target: Vector2, wind: float) -> Vector2:
 	var shot := ai.choose_shot(from, target, wind)
-	var facing := 1 if target.x > from.x else -1
+	var facing := EnemyAI.facing_for(from, target)
 	var vel := Ballistics.launch_velocity(shot.x, facing, shot.y)
 	var result := Ballistics.first_hit(from, vel, wind, _is_hit, BOUNDS)
 	check(result["hit"], "shot lands")
@@ -57,3 +57,23 @@ func test_shot_values_in_range():
 		var shot := _ai(60.0).choose_shot(Vector2(700, GROUND_Y - 170), t, 40.0)
 		check(shot.x >= 0.0 and shot.x <= 90.0, "elevation %s in 0..90" % shot.x)
 		check(shot.y >= 10.0 and shot.y <= 100.0, "power %s in 10..100" % shot.y)
+
+
+func test_facing_for_follows_target_side():
+	check_eq(EnemyAI.facing_for(Vector2(0, 0), Vector2(10, 0)), 1, "target right")
+	check_eq(EnemyAI.facing_for(Vector2(10, 0), Vector2(0, 0)), -1, "target left")
+
+
+func test_choose_shot_is_fast_on_heightmap_terrain():
+	var heights := PackedFloat32Array()
+	for col in 100:
+		heights.append(400.0 + 60.0 * sin(col * 0.2))
+	var ai := _ai(0.0)
+	ai.is_hit = func(pos: Vector2) -> bool:
+		var col := clampi(int(pos.x / 16.0), 0, 99)
+		return pos.y >= heights[col]
+	var started := Time.get_ticks_usec()
+	ai.choose_shot(Vector2(100, 300), Vector2(1400, heights[87]), 40.0)
+	var ms := (Time.get_ticks_usec() - started) / 1000.0
+	print("    choose_shot took %.1f ms" % ms)
+	check(ms < 100.0, "choose_shot took %.1f ms" % ms)

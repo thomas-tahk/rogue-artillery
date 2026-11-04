@@ -31,6 +31,14 @@ func test_trajectory_starts_at_start_and_falls():
 	check(path[path.size() - 1].x > start.x, "moves along initial velocity")
 
 
+func test_is_out_ignores_top():
+	var b := Rect2(0, 0, 100, 100)
+	check(not Ballistics.is_out(Vector2(50, -500), b), "above top is not out")
+	check(Ballistics.is_out(Vector2(-1, 50), b), "left is out")
+	check(Ballistics.is_out(Vector2(101, 50), b), "right is out")
+	check(Ballistics.is_out(Vector2(50, 101), b), "below is out")
+
+
 func test_first_hit_misses_when_leaving_bounds():
 	var vel := Ballistics.launch_velocity(45.0, 1, 100.0)
 	var small := Rect2(-100, -100, 200, 200)

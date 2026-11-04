@@ -21,7 +21,13 @@ static func step(pos: Vector2, vel: Vector2, wind_accel: float, dt: float) -> Pa
 
 ## Substeps needed so one frame never moves more than MAX_STEP_PX (no tunnelling).
 const MAX_STEP_PX := 8.0
-const MAX_FLIGHT_TIME := 30.0
+const FRAME_DT := 1.0 / 60.0
+const MAX_FLIGHT_FRAMES := 1800  # 30 s; shared cap for first_hit and Projectile
+
+
+## Out = left, right or below bounds. Above the top is NOT out (lobs come back down).
+static func is_out(pos: Vector2, bounds: Rect2) -> bool:
+	return pos.x < bounds.position.x or pos.x > bounds.end.x or pos.y > bounds.end.y
 
 
 static func substeps(vel: Vector2, dt: float) -> int:
@@ -45,16 +51,15 @@ static func trajectory(start: Vector2, vel: Vector2, wind_accel: float, max_time
 ## {hit: true, position} at the first point where is_hit is true;
 ## {hit: false, position} if it leaves bounds or times out.
 static func first_hit(start: Vector2, vel: Vector2, wind_accel: float, is_hit: Callable, bounds: Rect2) -> Dictionary:
-	var frame_dt := 1.0 / 60.0
 	var pos := start
 	var v := vel
-	for frame in int(MAX_FLIGHT_TIME / frame_dt):
-		var n := substeps(v, frame_dt)
+	for frame in MAX_FLIGHT_FRAMES:
+		var n := substeps(v, FRAME_DT)
 		for i in n:
-			var s := step(pos, v, wind_accel, frame_dt / n)
+			var s := step(pos, v, wind_accel, FRAME_DT / n)
 			pos = s[0]
 			v = s[1]
-			if not bounds.has_point(pos):
+			if is_out(pos, bounds):
 				return {"hit": false, "position": pos}
 			if is_hit.call(pos):
 				return {"hit": true, "position": pos}
