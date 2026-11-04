@@ -74,3 +74,51 @@ func test_surface_y_inf_for_emptied_column_and_world_rect() -> void:
 	check_eq(t.surface_y(30 * 16 + 8), INF, "emptied column is INF")
 	check_eq(t.world_rect(), Rect2(0, 0, 1600, 640), "world rect")
 	t.queue_free()
+
+
+func _top_row(t: Terrain, col: int) -> int:
+	var best := 9999
+	for cell in t.get_used_cells():
+		if cell.x == col:
+			best = mini(best, cell.y)
+	return best
+
+
+func test_surface_y_exact_and_solid_boundary() -> void:
+	var t := _make(11)
+	for col in W:
+		var x := col * 16 + 8
+		var top := _top_row(t, col)
+		check_eq(t.surface_y(x), float(top * 16), "col %d surface_y" % col)
+		check(t.is_solid(Vector2(x, top * 16 + 1)), "col %d solid just below surface" % col)
+		check(not t.is_solid(Vector2(x, top * 16 - 1)), "col %d empty just above surface" % col)
+	t.queue_free()
+
+
+func test_adjacent_columns_differ_by_at_most_one_row() -> void:
+	for seed_value in 50:
+		var t := _make(seed_value)
+		for col in W - 1:
+			var d := absf(t.surface_y(col * 16 + 8) - t.surface_y((col + 1) * 16 + 8))
+			check(d <= 16.0, "seed %d cols %d/%d step %s" % [seed_value, col, col + 1, d])
+		t.queue_free()
+
+
+func test_narrow_world_does_not_crash() -> void:
+	var t: Terrain = load("res://src/scenes/terrain.tscn").instantiate()
+	add_child(t)
+	t.generate(1, 10, 40)
+	check_eq(t.world_rect(), Rect2(0, 0, 160, 640), "narrow world rect")
+	t.queue_free()
+
+
+func test_offset_node_uses_world_coordinates() -> void:
+	var t := _make(5)
+	t.position = Vector2(100, 50)
+	var x := 100.0 + 30 * 16 + 8
+	check_eq(t.surface_y(x), float(_top_row(t, 30) * 16) + 50.0, "offset surface_y")
+	check(t.is_solid(Vector2(x, t.surface_y(x) + 1)), "offset is_solid")
+	check_eq(t.world_rect(), Rect2(100, 50, 1600, 640), "offset world_rect")
+	t.destroy_circle(Vector2(x, t.surface_y(x) + 8), 4.0)
+	check(not t.is_solid(Vector2(x, t.surface_y(x) - 1)), "offset destroy")
+	t.queue_free()
