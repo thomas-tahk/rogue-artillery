@@ -15,9 +15,12 @@ const BLAST_DAMAGE := 50.0
 const BLAST_FALLOFF_RADIUS := BLAST_RADIUS + 16.0
 const THINK_TIME := 1.2
 const SETTLE_TIME := 1.0
-const AIM_ERROR_START := 150.0
-const AIM_ERROR_DECAY := 0.7
-const AIM_ERROR_FLOOR := 35.0
+const AIM_ERROR_START := 180.0
+const AIM_ERROR_DECAY := 0.8
+const AIM_ERROR_FLOOR := 45.0
+const WIND_MAX := 6
+const SETTLE_FRAMES_MAX := 60
+const SPAWN_GAP := 2.0
 const FALL_MARGIN := 40.0
 const HOLD_DELAY := 0.3
 const AIM_RATE := 30.0
@@ -34,6 +37,7 @@ var player: Tank
 var enemy: Tank
 var turn_count := 0
 var wind := 0
+var _wind_accel := 0.0
 
 var _phase := Phase.SPAWN
 var _timer := 0.0
@@ -104,30 +108,33 @@ func restart() -> void:
 func start_battle(seed_value: int) -> void:
 	_generation += 1
 	var generation := _generation
-	_phase = Phase.SPAWN
-	_hud.hide_result()
-	_clear_actors()
-	_trails.clear()
-	_aim_error = [AIM_ERROR_START, AIM_ERROR_START]
-	var used_seed := seed_value if seed_value != 0 else randi()
-	_rng.seed = used_seed
-	_ai.rng.seed = used_seed + 1
-	terrain.generate(used_seed, WORLD_TILES.x, WORLD_TILES.y)
-	player = _spawn_tank("player", 1)
-	enemy = _spawn_tank("enemy", -1)
-	turn_count = 0
+	_setup_world(seed_value if seed_value != 0 else randi())
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	if generation != _generation:
 		return
 	player.set_physics_process(true)
 	enemy.set_physics_process(true)
-	for i in 60:
+	for i in SETTLE_FRAMES_MAX:
 		if player.is_on_floor() and enemy.is_on_floor():
 			break
 		await get_tree().physics_frame
 	if generation == _generation:
 		_begin_turn(true)
+
+
+func _setup_world(used_seed: int) -> void:
+	_phase = Phase.SPAWN
+	_hud.hide_result()
+	_clear_actors()
+	_trails.clear()
+	_aim_error = [AIM_ERROR_START, AIM_ERROR_START]
+	_rng.seed = used_seed
+	_ai.rng.seed = used_seed + 1
+	terrain.generate(used_seed, WORLD_TILES.x, WORLD_TILES.y)
+	player = _spawn_tank("player", 1)
+	enemy = _spawn_tank("enemy", -1)
+	turn_count = 0
 
 
 ## Carves a crater and damages every tank in range (the shooter included).
@@ -157,11 +164,10 @@ func _clear_actors() -> void:
 
 func _spawn_tank(team: String, facing: int) -> Tank:
 	var tank: Tank = TANK_SCENE.instantiate()
-	var fraction := Terrain.PAD_CENTERS[0 if team == "player" else 1]
-	var x := roundf(WORLD_TILES.x * fraction) * Terrain.TILE + Terrain.TILE / 2.0
+	var x := terrain.pad_center_x(0 if team == "player" else 1)
 	tank.team = team
 	tank.facing = facing
-	tank.position = Vector2(x, terrain.surface_y(x) - 16.0)
+	tank.position = Vector2(x, terrain.surface_y(x) - tank.half_extents().y - SPAWN_GAP)
 	tank.set_physics_process(false)
 	tank.died.connect(_on_tank_died.bind(tank))
 	add_child(tank)
@@ -170,14 +176,15 @@ func _spawn_tank(team: String, facing: int) -> Tank:
 
 
 func _on_tank_died(tank: Tank) -> void:
-	tank.get_node("Sprite2D").modulate = Color(0.2, 0.2, 0.2)
+	tank.set_tint(Color(0.2, 0.2, 0.2))
 	tank.show_aim = false
 
 
 func _begin_turn(player_side: bool) -> void:
 	_player_turn = player_side
 	turn_count += 1
-	wind = _rng.randi_range(-10, 10)
+	wind = _rng.randi_range(-WIND_MAX, WIND_MAX)
+	_wind_accel = wind * Ballistics.WIND_ACCEL_PER_UNIT
 	var active := _active()
 	active.facing = EnemyAI.facing_for(active.global_position, _opponent().global_position)
 	active.refuel()
@@ -247,7 +254,7 @@ func _ai_fire() -> void:
 	var side := 0 if _player_turn else 1
 	_ai.aim_error_px = _aim_error[side]
 	_aim_error[side] = maxf(_aim_error[side] * AIM_ERROR_DECAY, AIM_ERROR_FLOOR)
-	var shot := _ai.choose_shot(shooter.muzzle_position(), target.global_position, wind * Ballistics.WIND_ACCEL_PER_UNIT)
+	var shot := _ai.choose_shot(shooter.muzzle_position(), target.global_position, _wind_accel)
 	shooter.aim_deg = shot.x
 	shooter.power_pct = shot.y
 	_fire(shooter, hit)
@@ -261,7 +268,7 @@ func _fire(shooter: Tank, hit: Callable) -> void:
 	add_child(shell)
 	_shell = shell
 	shell.setup(shooter.muzzle_position(), shooter.launch_velocity(), {
-		"wind_accel": wind * Ballistics.WIND_ACCEL_PER_UNIT, "is_hit": hit, "bounds": terrain.world_rect()})
+		"wind_accel": _wind_accel, "is_hit": hit, "bounds": terrain.world_rect()})
 	shell.landed.connect(_on_shell_landed.bind(_generation))
 
 

@@ -76,6 +76,7 @@ func test_restart_produces_different_terrain():
 	var battle := _battle(21, false)
 	await _frames(5)
 	var before := _profile(battle.terrain)
+	seed(1234)  # restart draws a random seed; pin it so this test is repeatable
 	battle.restart()
 	await _frames(5)
 	check(before != _profile(battle.terrain), "terrain differs after restart")

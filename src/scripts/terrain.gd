@@ -48,6 +48,12 @@ func destroy_circle(world_pos: Vector2, radius_px: float) -> void:
 				erase_cell(Vector2i(col, row))
 
 
+## Centre x of spawn pad `index` (0 = left, 1 = right), same column the generator flattens.
+func pad_center_x(index: int) -> float:
+	var col := clampi(roundi(_width * PAD_CENTERS[index]), 0, _width - 1)
+	return col * TILE + TILE / 2.0
+
+
 func world_rect() -> Rect2:
 	return Rect2(to_global(Vector2.ZERO), Vector2(_width * TILE, _height * TILE))
 
