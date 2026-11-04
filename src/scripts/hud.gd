@@ -68,6 +68,7 @@ func show_result(player_won: bool) -> void:
 
 func hide_result() -> void:
 	_overlay.visible = false
+	_turn.text = ""
 
 
 func _build_status_bar() -> Control:

@@ -1,4 +1,4 @@
-## Draws the live shell (head + fading tail) and the faint dotted path of each side's last shot.
+## Draws the live shell (head + fading tail) and the dotted path of each side's last shot.
 class_name ShotTrails
 extends Node2D
 

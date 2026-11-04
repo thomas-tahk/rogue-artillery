@@ -7,6 +7,7 @@ const REFINE_ROUNDS := 5
 const GOOD_ENOUGH_PX := 4.0
 const GROUND_SCAN_START := 300.0
 const GROUND_SCAN_STEP := 8.0
+const UNREACHABLE_MIN_PX := 40.0
 const MISS_SCORE := 1.0e9
 
 var is_hit: Callable
@@ -19,12 +20,21 @@ static func facing_for(from: Vector2, target: Vector2) -> int:
 	return 1 if target.x >= from.x else -1
 
 
-## Returns Vector2(elevation_deg 0..90, power_pct 10..100). ~200 first_hit calls.
+## Returns Vector2(elevation_deg 0..90, power_pct 10..100). ~200 first_hit calls per solve.
+## If the offset aim point is unreachable (e.g. shooter in a pit), re-solves at the target itself.
 func choose_shot(from: Vector2, target: Vector2, wind_accel: float) -> Vector2:
-	var query := {
-		"from": from, "facing": facing_for(from, target),
-		"wind": wind_accel, "aim_at": _aim_point(target),
-	}
+	var query := _query(from, target, wind_accel, _aim_point(target))
+	var best := _solve(query)
+	if query["aim_at"] != target and _score_shot(query, best) > maxf(aim_error_px, UNREACHABLE_MIN_PX):
+		best = _solve(_query(from, target, wind_accel, target))
+	return best
+
+
+func _query(from: Vector2, target: Vector2, wind_accel: float, aim_at: Vector2) -> Dictionary:
+	return {"from": from, "facing": facing_for(from, target), "wind": wind_accel, "aim_at": aim_at}
+
+
+func _solve(query: Dictionary) -> Vector2:
 	var step := COARSE_STEP
 	var best := _best_on_grid(query, {
 		"elevation": Vector2(5.0, 85.0), "power": Vector2(Ballistics.MIN_POWER, Ballistics.MAX_POWER), "step": step})
@@ -38,7 +48,6 @@ func choose_shot(from: Vector2, target: Vector2, wind_accel: float) -> Vector2:
 	return best
 
 
-## Misses are horizontal: aim at the ground dx px to one side of the target, |dx| in [0.5, 1] x aim_error_px.
 func _aim_point(target: Vector2) -> Vector2:
 	if aim_error_px <= 0.0:
 		return target

@@ -196,3 +196,22 @@ func test_restart_before_landing_leaves_new_battle_untouched():
 
 func _near_ground(battle: Battle, shell: Projectile) -> bool:
 	return shell.velocity.y > 0.0 and shell.position.y > battle.terrain.surface_y(shell.position.x) - 20.0
+
+
+func test_autoplay_ends_within_40_turns_over_many_seeds():
+	var turns: Array[int] = []
+	Engine.time_scale = 8.0
+	for seed_value in range(1, 11):
+		_ended = false
+		var battle := _battle(seed_value, true)
+		battle.battle_ended.connect(_on_ended)
+		var frames := 0
+		while not _ended and battle.turn_count <= 40 and frames < 20000:
+			await get_tree().physics_frame
+			frames += 1
+		turns.append(battle.turn_count)
+		check(_ended and battle.turn_count <= 40, "seed %d ended within 40 turns (turns=%d)" % [seed_value, battle.turn_count])
+		battle.queue_free()
+		await _frames(2)
+	Engine.time_scale = 1.0
+	print("    autoplay turns per seed 1..10: ", turns)
