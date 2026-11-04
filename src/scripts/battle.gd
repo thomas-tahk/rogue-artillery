@@ -110,7 +110,12 @@ func start_battle(seed_value: int) -> void:
 		return
 	player.set_physics_process(true)
 	enemy.set_physics_process(true)
-	_begin_turn(true)
+	for i in 60:
+		if player.is_on_floor() and enemy.is_on_floor():
+			break
+		await get_tree().physics_frame
+	if generation == _generation:
+		_begin_turn(true)
 
 
 ## Carves a crater and damages every tank in range (the shooter included).
