@@ -77,3 +77,65 @@ func test_choose_shot_is_fast_on_heightmap_terrain():
 	var ms := (Time.get_ticks_usec() - started) / 1000.0
 	print("    choose_shot took %.1f ms" % ms)
 	check(ms < 100.0, "choose_shot took %.1f ms" % ms)
+
+
+## Real generated terrain: the AI aims at ground to one side of the tank, so large errors really miss.
+## "Miss" here means "not a direct hit": splash from the blast can still hurt the tank.
+func _miss_rate(error_px: float) -> float:
+	var terrain: Terrain = load("res://src/scenes/terrain.tscn").instantiate()
+	add_child(terrain)
+	terrain.generate(3, 100, 40)
+	var from := Vector2(terrain.pad_center_x(0) + 25.0, terrain.surface_y(terrain.pad_center_x(0)) - 20.0)
+	var centre := Vector2(terrain.pad_center_x(1), terrain.surface_y(terrain.pad_center_x(1)) - 14.0)
+	var box := Rect2(centre - Vector2(27, 13.5), Vector2(54, 27))
+	var is_hit := func(p: Vector2) -> bool: return terrain.is_solid(p) or box.has_point(p)
+	var ai := EnemyAI.new()
+	ai.is_hit = is_hit
+	ai.bounds = terrain.world_rect()
+	ai.aim_error_px = error_px
+	var misses := 0
+	for i in 100:
+		ai.rng.seed = i
+		var shot := ai.choose_shot(from, centre, 0.0)
+		var result := Ballistics.first_hit(from, Ballistics.launch_velocity(shot.x, 1, shot.y), 0.0, is_hit, ai.bounds)
+		if not (result["hit"] and box.has_point(result["position"])):
+			misses += 1
+	terrain.free()
+	return misses / 100.0
+
+
+func test_error_at_battle_start_nearly_never_direct_hits():
+	var rate := _miss_rate(Battle.AIM_ERROR_START)
+	check(rate >= 0.8, "miss rate at start error %s" % rate)
+
+
+func test_error_at_floor_still_often_no_direct_hit():
+	var rate := _miss_rate(Battle.AIM_ERROR_FLOOR)
+	check(rate >= 0.3, "miss rate at floor error %s" % rate)
+
+
+## Aim points inside narrow deep trenches beside the target are unreachable (no shell can descend that steeply).
+## The AI must then aim at the target itself instead of repeating the shot nearest to the unreachable point.
+const TRENCH_OFFSET := 33.0
+const TRENCH_HALF_WIDTH := 12.0
+const TRENCH_DEPTH := 300.0
+const TRENCH_TARGET_X := 1100.0
+
+
+func _trench_hit(pos: Vector2) -> bool:
+	var in_trench := absf(absf(pos.x - TRENCH_TARGET_X) - TRENCH_OFFSET) <= TRENCH_HALF_WIDTH
+	return pos.y >= GROUND_Y + (TRENCH_DEPTH if in_trench else 0.0)
+
+
+func test_unreachable_offset_falls_back_to_target():
+	var from := Vector2(100, GROUND_Y - 20)
+	var target := Vector2(TRENCH_TARGET_X, GROUND_Y)
+	var worst := 0.0
+	for s in range(1, 41):
+		var ai := _ai(45.0, s)
+		ai.is_hit = _trench_hit
+		var shot := ai.choose_shot(from, target, 0.0)
+		var vel := Ballistics.launch_velocity(shot.x, 1, shot.y)
+		var land: Vector2 = Ballistics.first_hit(from, vel, 0.0, _trench_hit, BOUNDS)["position"]
+		worst = maxf(worst, absf(land.x - target.x))
+	check(worst <= 15.0, "every shot lands at the target, worst miss %s px" % worst)

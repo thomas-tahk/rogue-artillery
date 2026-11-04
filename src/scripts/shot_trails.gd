@@ -1,4 +1,4 @@
-## Draws the live shell (head + fading tail) and the faint dotted path of each side's last shot.
+## Draws the live shell (head + fading tail) and the dotted path of each side's last shot.
 class_name ShotTrails
 extends Node2D
 
@@ -46,9 +46,9 @@ func _draw() -> void:
 
 
 func _draw_dots(points: PackedVector2Array, color: Color) -> void:
-	color.a = 0.6
+	color.a = 0.9
 	for i in range(0, points.size(), DOT_EVERY):
-		draw_circle(points[i], 2.0, color)
+		draw_circle(points[i], 4.0, color)
 
 
 func _draw_live() -> void:

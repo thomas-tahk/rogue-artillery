@@ -5,7 +5,7 @@ on:
     branches-ignore: [gh-pages]
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.3-stable
@@ -58,6 +58,8 @@ jobs:
   deploy:
     needs: test-and-build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     concurrency:
       group: gh-pages-${{ github.ref }}
       cancel-in-progress: false

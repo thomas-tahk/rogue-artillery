@@ -6,7 +6,7 @@ extends CharacterBody2D
 signal hp_changed(hp: int, max_hp: int)
 signal died
 
-const TILE := 16.0
+const MAX_FUEL := 100.0  # px of driving per turn
 const DRIVE_SPEED := 60.0  # px per second
 const MUZZLE_OFFSET := Vector2(25.0, -5.0)  # barrel tip, facing right
 const AIM_LINE_MIN := 20.0
@@ -24,7 +24,7 @@ var max_hp := 100
 var hp := 100
 var aim_deg := 45.0
 var power_pct := 60.0
-var fuel := 100.0
+var fuel := MAX_FUEL
 var show_aim := false:
 	set(value):
 		show_aim = value
@@ -51,16 +51,16 @@ func set_tint(color: Color) -> void:
 
 
 func refuel() -> void:
-	fuel = 100.0
+	fuel = MAX_FUEL
 
 
 func adjust_aim(delta_deg: float) -> void:
-	aim_deg = clampf(aim_deg + delta_deg, 0.0, 90.0)
+	aim_deg = clampf(aim_deg + delta_deg, 0.0, Ballistics.MAX_ELEVATION)
 	queue_redraw()
 
 
 func adjust_power(delta: float) -> void:
-	power_pct = clampf(power_pct + delta, 10.0, 100.0)
+	power_pct = clampf(power_pct + delta, Ballistics.MIN_POWER, Ballistics.MAX_POWER)
 	queue_redraw()
 
 
@@ -99,14 +99,18 @@ func is_dead() -> bool:
 	return hp <= 0
 
 
+func half_extents() -> Vector2:
+	return (get_node("CollisionShape2D").shape as RectangleShape2D).size / 2.0
+
+
 func contains_point(world_pos: Vector2) -> bool:
-	var half: Vector2 = (get_node("CollisionShape2D").shape as RectangleShape2D).size / 2.0
+	var half := half_extents()
 	var local := world_pos - global_position
 	return absf(local.x) <= half.x and absf(local.y) <= half.y
 
 
 func _try_step_up(motion: Vector2) -> bool:
-	var lift := Vector2(0.0, -(TILE + 1.0))
+	var lift := Vector2(0.0, -(Terrain.TILE + 1.0))
 	var raised := global_transform.translated(lift)
 	if test_move(global_transform, lift) or test_move(raised, motion):
 		return false

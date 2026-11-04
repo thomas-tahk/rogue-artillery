@@ -30,6 +30,7 @@ func _run() -> void:
 			var before := _failures.size()
 			suite.set("runner", self)
 			await suite.call(name)
+			await _let_freed_nodes_go()
 			if _failures.size() == before:
 				passed += 1
 				print("  PASS ", _current)
@@ -39,6 +40,12 @@ func _run() -> void:
 	for f in _failures:
 		print("  FAIL ", f)
 	quit(1 if _failures.size() > 0 else 0)
+
+
+## Freed bodies leave the physics space a frame later; don't let them leak into the next test.
+func _let_freed_nodes_go() -> void:
+	for i in 2:
+		await physics_frame
 
 
 func _test_files() -> Array[String]:

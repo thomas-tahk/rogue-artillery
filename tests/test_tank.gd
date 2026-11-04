@@ -183,3 +183,51 @@ func test_facing_flips_sprite_and_muzzle():
 	check(sprite.flip_h, "sprite flipped facing left")
 	check(tank.muzzle_position().x < tank.position.x, "muzzle left")
 	tank.queue_free()
+
+
+func test_stepping_flag_allows_driving_while_airborne_after_step_up():
+	var low := _floor(300.0, -500.0, 0.0)
+	var high := _floor(284.0, 0.0, 500.0)
+	var tank := _tank(Vector2(-30, 280))
+	await _frames(30)
+	var rest_y := tank.position.y
+	for i in 60:  # drive until the step-up lifts the tank, then stop at once
+		tank.drive(1, 0.05)
+		if tank.position.y < rest_y - 8.0:
+			break
+		await get_tree().physics_frame
+	check(tank.position.y < rest_y - 8.0, "precondition: step-up happened")
+	await _frames(1)
+	var x0 := tank.position.x
+	check(not tank.is_on_floor(), "precondition: still airborne right after the step-up")
+	tank.drive(1, 0.05)
+	check(tank.position.x > x0, "can keep driving while airborne after a step-up")
+	low.queue_free()
+	high.queue_free()
+	tank.queue_free()
+
+
+func _drive_pad_to_pad(seed_value: int, from_pad: int) -> void:
+	var terrain: Terrain = load("res://src/scenes/terrain.tscn").instantiate()
+	add_child(terrain)
+	terrain.generate(seed_value, 100, 40)
+	var start_x := terrain.pad_center_x(from_pad)
+	var goal_x := terrain.pad_center_x(1 - from_pad)
+	var tank := _tank(Vector2(start_x, terrain.surface_y(start_x) - 16.0))
+	await _frames(20)
+	var direction := 1 if goal_x > start_x else -1
+	for i in 900:
+		if absf(tank.position.x - goal_x) < 12.0:
+			break
+		tank.refuel()
+		tank.drive(direction, 0.1)
+		await get_tree().physics_frame
+	check_near(tank.position.x, goal_x, 12.0, "seed %d pad %d reached the other pad" % [seed_value, from_pad])
+	tank.queue_free()
+	terrain.queue_free()
+
+
+func test_drives_pad_to_pad_on_generated_terrain():
+	for seed_value in [1, 2, 3, 4]:
+		await _drive_pad_to_pad(seed_value, 0)
+		await _drive_pad_to_pad(seed_value, 1)

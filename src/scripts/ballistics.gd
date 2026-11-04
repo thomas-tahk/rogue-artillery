@@ -6,6 +6,9 @@ extends RefCounted
 const GRAVITY := 980.0
 const SPEED_PER_POWER := 12.0
 const WIND_ACCEL_PER_UNIT := 8.0
+const MIN_POWER := 10.0
+const MAX_POWER := 100.0
+const MAX_ELEVATION := 90.0
 
 
 static func launch_velocity(elevation_deg: float, facing: int, power_pct: float) -> Vector2:

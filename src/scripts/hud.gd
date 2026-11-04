@@ -61,12 +61,14 @@ func set_fuel(fuel: float) -> void:
 
 func show_result(player_won: bool) -> void:
 	_result.text = "YOU WIN" if player_won else "YOU LOSE"
+	_turn.text = _result.text
 	_result.add_theme_color_override("font_color", Color(0.2, 1, 0.3) if player_won else Color(1, 0.3, 0.25))
 	_overlay.visible = true
 
 
 func hide_result() -> void:
 	_overlay.visible = false
+	_turn.text = ""
 
 
 func _build_status_bar() -> Control:
@@ -86,7 +88,7 @@ func _build_status_bar() -> Control:
 
 func _build_wind() -> Control:
 	var box := HBoxContainer.new()
-	_wind_arrow.custom_minimum_size = Vector2(56, 28)
+	_wind_arrow.custom_minimum_size = Vector2(76, 28)
 	_wind_arrow.draw.connect(_draw_wind_arrow)
 	_style(_wind_label, 22)
 	box.add_child(_wind_arrow)
@@ -146,7 +148,7 @@ func _draw_wind_arrow() -> void:
 	if dir == 0.0:
 		_wind_arrow.draw_circle(mid, 5.0, WIND_COLOR)
 		return
-	var half := 10.0 + absf(_wind) * 1.6
+	var half := 8.0 + absf(_wind) * 3.0
 	var tip := mid + Vector2(dir * half, 0)
 	_wind_arrow.draw_line(mid - Vector2(dir * half, 0), tip, WIND_COLOR, 4.0)
 	_wind_arrow.draw_colored_polygon(
