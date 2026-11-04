@@ -4,7 +4,6 @@
 /android/
 .import/
 export.cfg
-export_presets.cfg
 export_credentials.cfg
 *.tmp
 .DS_Store
@@ -16,3 +15,6 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Web export output
+build/
