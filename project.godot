@@ -11,11 +11,13 @@ config_version=5
 [application]
 
 config/name="Rogue Artillery"
-run/main_scene="res://src/scenes/shooter.tscn"
+run/main_scene="res://src/scenes/battle.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [rendering]
+
+environment/defaults/default_clear_color=Color(0.1, 0.45, 0.95, 1)
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

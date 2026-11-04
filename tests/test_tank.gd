@@ -166,10 +166,10 @@ func test_contains_point():
 	var tank := _tank(Vector2(100, 100))
 	check(tank.contains_point(Vector2(100, 100)), "centre inside")
 	check(not tank.contains_point(Vector2(200, 100)), "100 px away outside")
-	check(tank.contains_point(Vector2(117.5, 100)), "just inside right edge")
-	check(not tank.contains_point(Vector2(118.5, 100)), "just outside right edge")
-	check(tank.contains_point(Vector2(100, 108.5)), "just inside bottom edge")
-	check(not tank.contains_point(Vector2(100, 109.5)), "just outside bottom edge")
+	check(tank.contains_point(Vector2(126.5, 100)), "just inside right edge")
+	check(not tank.contains_point(Vector2(127.5, 100)), "just outside right edge")
+	check(tank.contains_point(Vector2(100, 113.0)), "just inside bottom edge")
+	check(not tank.contains_point(Vector2(100, 114.0)), "just outside bottom edge")
 	tank.queue_free()
 
 

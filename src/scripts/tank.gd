@@ -8,11 +8,11 @@ signal died
 
 const TILE := 16.0
 const DRIVE_SPEED := 60.0  # px per second
-const MUZZLE_OFFSET := Vector2(17.0, -3.0)  # barrel tip, facing right
+const MUZZLE_OFFSET := Vector2(25.0, -5.0)  # barrel tip, facing right
 const AIM_LINE_MIN := 20.0
 const AIM_LINE_PER_POWER := 0.6
-const BAR_SIZE := Vector2(30.0, 4.0)
-const BAR_OFFSET_Y := -22.0
+const BAR_SIZE := Vector2(40.0, 6.0)
+const BAR_OFFSET_Y := -30.0
 
 @export var team := "player"
 @export var facing := 1:
@@ -43,6 +43,11 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if is_on_floor():
 		_stepping = false
+
+
+## Team colour goes on the sprite only, so the HP bar keeps its own colours.
+func set_tint(color: Color) -> void:
+	get_node("Sprite2D").modulate = color
 
 
 func refuel() -> void:
@@ -129,5 +134,6 @@ func _draw() -> void:
 func _draw_hp_bar() -> void:
 	var origin := Vector2(-BAR_SIZE.x / 2.0, BAR_OFFSET_Y)
 	var fraction := float(hp) / float(max_hp)
-	draw_rect(Rect2(origin, BAR_SIZE), Color(0.1, 0.1, 0.1, 0.8))
-	draw_rect(Rect2(origin, Vector2(BAR_SIZE.x * fraction, BAR_SIZE.y)), Color.LIME_GREEN)
+	var fill := Color(0.1, 0.9, 0.1) if fraction > 0.6 else (Color(1.0, 0.85, 0.0) if fraction > 0.3 else Color(1.0, 0.15, 0.1))
+	draw_rect(Rect2(origin - Vector2(1, 1), BAR_SIZE + Vector2(2, 2)), Color(0.05, 0.05, 0.05, 0.95))
+	draw_rect(Rect2(origin, Vector2(BAR_SIZE.x * fraction, BAR_SIZE.y)), fill)
