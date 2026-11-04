@@ -77,6 +77,52 @@ func test_drives_up_one_tile_step():
 	tank.queue_free()
 
 
+func _drive_for(tank: Tank, frames: int) -> void:
+	for i in frames:
+		tank.drive(1, 0.05)
+		await get_tree().physics_frame
+
+
+func test_tall_wall_blocks_tank():
+	var low := _floor(300.0, -500.0, 500.0)
+	var wall := _floor(268.0, 0.0, 500.0)
+	var tank := _tank(Vector2(-60, 280))
+	await _frames(30)
+	var y0 := tank.position.y
+	await _drive_for(tank, 80)
+	check(tank.position.x < 0.0, "stopped before 32 px wall, x=%s" % tank.position.x)
+	check_near(tank.position.y, y0, 0.5, "y stays on low floor")
+	low.queue_free()
+	wall.queue_free()
+	tank.queue_free()
+
+
+func test_step_with_low_ceiling_blocks_tank():
+	var low := _floor(300.0, -500.0, 0.0)
+	var high := _floor(284.0, 0.0, 500.0)
+	var ceiling := _floor(68.0, 0.0, 500.0)  # underside y=268: 16 px above the step
+	var tank := _tank(Vector2(-60, 280))
+	await _frames(30)
+	var y0 := tank.position.y
+	await _drive_for(tank, 80)
+	check(tank.position.x < 0.0, "did not pass under low ceiling, x=%s" % tank.position.x)
+	check_near(tank.position.y, y0, 0.5, "y unchanged")
+	low.queue_free()
+	high.queue_free()
+	ceiling.queue_free()
+	tank.queue_free()
+
+
+func test_no_steering_in_mid_air():
+	var tank := _tank(Vector2(0, 100))
+	await _frames(3)
+	var x0 := tank.position.x
+	tank.drive(1, 0.1)
+	check_eq(tank.position.x, x0, "no drive while airborne")
+	check_eq(tank.fuel, 100.0, "no fuel spent airborne")
+	tank.queue_free()
+
+
 func test_aim_and_power_clamp():
 	var tank := _tank(Vector2.ZERO)
 	tank.adjust_aim(1000.0)
@@ -120,6 +166,10 @@ func test_contains_point():
 	var tank := _tank(Vector2(100, 100))
 	check(tank.contains_point(Vector2(100, 100)), "centre inside")
 	check(not tank.contains_point(Vector2(200, 100)), "100 px away outside")
+	check(tank.contains_point(Vector2(117.5, 100)), "just inside right edge")
+	check(not tank.contains_point(Vector2(118.5, 100)), "just outside right edge")
+	check(tank.contains_point(Vector2(100, 108.5)), "just inside bottom edge")
+	check(not tank.contains_point(Vector2(100, 109.5)), "just outside bottom edge")
 	tank.queue_free()
 
 

@@ -9,7 +9,6 @@ signal died
 const TILE := 16.0
 const DRIVE_SPEED := 60.0  # px per second
 const MUZZLE_OFFSET := Vector2(17.0, -3.0)  # barrel tip, facing right
-const HALF_SIZE := Vector2(19.0, 10.0)
 const AIM_LINE_MIN := 20.0
 const AIM_LINE_PER_POWER := 0.6
 const BAR_SIZE := Vector2(30.0, 4.0)
@@ -31,7 +30,8 @@ var show_aim := false:
 		show_aim = value
 		queue_redraw()
 
-var _died_emitted := false
+
+var _stepping := false  # true from a step-up until the tank lands
 
 
 func _ready() -> void:
@@ -41,6 +41,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	velocity.y += Ballistics.GRAVITY * delta
 	move_and_slide()
+	if is_on_floor():
+		_stepping = false
 
 
 func refuel() -> void:
@@ -60,7 +62,7 @@ func adjust_power(delta: float) -> void:
 ## Moves up to DRIVE_SPEED * delta px, capped by fuel; spends fuel per px moved.
 func drive(direction: int, delta: float) -> void:
 	var distance := minf(DRIVE_SPEED * delta, fuel)
-	if distance <= 0.0 or direction == 0:
+	if distance <= 0.0 or direction == 0 or not (is_on_floor() or _stepping):
 		return
 	var motion := Vector2(signf(direction) * distance, 0.0)
 	if test_move(global_transform, motion) and not _try_step_up(motion):
@@ -84,8 +86,7 @@ func take_damage(amount: int) -> void:
 	hp = maxi(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
 	queue_redraw()
-	if hp == 0 and not _died_emitted:
-		_died_emitted = true
+	if hp == 0:
 		died.emit()
 
 
@@ -94,8 +95,9 @@ func is_dead() -> bool:
 
 
 func contains_point(world_pos: Vector2) -> bool:
+	var half: Vector2 = (get_node("CollisionShape2D").shape as RectangleShape2D).size / 2.0
 	var local := world_pos - global_position
-	return absf(local.x) <= HALF_SIZE.x and absf(local.y) <= HALF_SIZE.y
+	return absf(local.x) <= half.x and absf(local.y) <= half.y
 
 
 func _try_step_up(motion: Vector2) -> bool:
@@ -104,6 +106,7 @@ func _try_step_up(motion: Vector2) -> bool:
 	if test_move(global_transform, lift) or test_move(raised, motion):
 		return false
 	global_position += lift
+	_stepping = true
 	return true
 
 
