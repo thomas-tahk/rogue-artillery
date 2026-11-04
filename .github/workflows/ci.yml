@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches-ignore: [gh-pages]
-  pull_request:
 
 permissions:
   contents: write
@@ -58,11 +57,9 @@ jobs:
 
   deploy:
     needs: test-and-build
-    # push events only: same-repo PRs already get a push run; fork PRs never deploy.
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency:
-      group: gh-pages-deploy
+      group: gh-pages-${{ github.ref }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -71,4 +68,7 @@ jobs:
           name: web-build
           path: build/web
       - name: Deploy to gh-pages
-        run: tools/deploy_pages.sh "${{ github.ref_name }}" build/web
+        env:
+          BRANCH: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tools/deploy_pages.sh "$BRANCH" build/web
