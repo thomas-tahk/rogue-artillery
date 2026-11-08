@@ -12,7 +12,8 @@ Borrow genres, mechanics and moods freely. Never copy another game's names, char
 
 ## How this project runs
 
-- Design first, with the owner: run `/chief` (Shape) and write `docs/design.md`. Don't build gameplay until he signs off on it.
+- Design first, with the owner: run `/chief` (Shape). Its vision doc is the design; keep it short. Don't build gameplay until he signs off on it.
+- Builders are the indie game specialists: `gameplay-engineer`, `game-designer`, `game-artist`. Fast iterations over perfection; every milestone ends in a build he can play.
 - After sign-off, builds run with no input from him. He only plays builds and gives feedback.
 - Questions for him go in `needs-you` issues, one ask per issue.
 
