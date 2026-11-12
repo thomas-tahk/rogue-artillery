@@ -5,3 +5,5 @@ One standalone Godot 4.7 project per art direction, each rendering the same batt
 Same moment in every direction: player tank on the left aiming, enemy tank on the right, a shell mid-flight with a trail, a fresh crater, an explosion, and the HUD (angle and power gauge on the tank, wind, both HP bars, turn banner).
 
 Capture: `godot --path mockups/<slug> --resolution 1280x720 -- --capture` saves `mockups/<slug>/shot.png` and quits.
+
+Off-screen (no window on the host): `tools/capture/capture.sh mockups/<slug>` runs the same capture in Docker with Xvfb and software GL. Note: system fonts (e.g. papercraft's Marker Felt) don't exist in the container.
