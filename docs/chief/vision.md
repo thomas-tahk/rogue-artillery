@@ -32,6 +32,10 @@ A single-player, turn-based artillery roguelite: Gunbound's "fight the physics" 
 | M4 | Enemy variety | 3+ enemy types with distinct, learnable behaviour; a mini-boss. |
 | M5 | First biome | Grasslands weather/hazards; pixel-bitmap terrain (replacing tiles) with dirt/stone/metal. |
 
+## Shape notes from him (2026-11-12)
+- **Close-range extreme is a real strategy.** A build can drive into melee range and ram, or fire short-range weapons (blast, spread). This is the Defense/Melee path's identity. It needs mobility, armour and close-range shots to work together.
+- **Look:** stylized and timeless, like his main inspiration's art, never retro for its own sake. Stand-in art must look like a finished demo. Compare several rendered looks before picking one. Setting and lore come after, to match the look.
+
 ## Assumptions (unverified; Research queue)
 - **Assumption:** the discrete-action-per-turn question in `docs/TODO_research.md` can wait until M3; M1 uses classic move-then-shoot turns. *(open)*
 - **Assumption:** tile-based terrain (16 px tiles) is good enough until M5; the GDD's pixel-bitmap terrain is a later swap behind the same `Terrain` API. *(open)*
