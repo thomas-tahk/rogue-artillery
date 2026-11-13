@@ -36,6 +36,7 @@ A single-player, turn-based artillery roguelite: Gunbound's "fight the physics" 
 - **Close-range extreme is a real strategy.** A build can drive into melee range and ram, or fire short-range weapons (blast, spread). This is the Defense/Melee path's identity. It needs mobility, armour and close-range shots to work together.
 - **Look:** stylized and timeless, like his main inspiration's art, never retro for its own sake. Stand-in art must look like a finished demo. Compare several rendered looks before picking one. Setting and lore come after, to match the look.
 - **Look round 1 verdict (2026-11-12, #10):** none great. B Cartoon is closest to what he imagined but flat: no light or shading, no depth, tanks without personality, generic clip-art feel, "and then some". E Hi-bit pixel is his favourite overall. Round 2: B's cartoon style with E's lighting and depth, plus one mockup made with real CC0 art packs.
+- **Idea (his, 2026-11-12): silhouette map.** Look A's silhouettes as a special map or weather where vision is obscured: the art pushes to an extreme silhouette version of the main style. Fits the GDD's weather/visibility system (low visibility favours mobile builds). Likely a lighting/shader layer over the main style, not separate art. Park until the look and the map design are settled.
 
 ## Assumptions (unverified; Research queue)
 - **Assumption:** the discrete-action-per-turn question in `docs/TODO_research.md` can wait until M3; M1 uses classic move-then-shoot turns. *(open)*
