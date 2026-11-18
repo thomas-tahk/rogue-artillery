@@ -37,6 +37,14 @@ A single-player, turn-based artillery roguelite: Gunbound's "fight the physics" 
 - **Look:** stylized and timeless, like his main inspiration's art, never retro for its own sake. Stand-in art must look like a finished demo. Compare several rendered looks before picking one. Setting and lore come after, to match the look.
 - **Look round 1 verdict (2026-11-12, #10):** none great. B Cartoon is closest to what he imagined but flat: no light or shading, no depth, tanks without personality, generic clip-art feel, "and then some". E Hi-bit pixel is his favourite overall. Round 2: B's cartoon style with E's lighting and depth, plus one mockup made with real CC0 art packs.
 - **Idea (his, 2026-11-12): silhouette map.** Look A's silhouettes as a special map or weather where vision is obscured: the art pushes to an extreme silhouette version of the main style. Fits the GDD's weather/visibility system (low visibility favours mobile builds). Likely a lighting/shader layer over the main style, not separate art. Park until the look and the map design are settled.
+- **Look round 2 verdict (2026-11-17, #10):** F "cartoon-lit" is the direction; not perfect. Polish it. Close-up framing is a feature (max in-game zoom, e.g. a ramming moment), not the default view.
+- **Shape round 1 answers (2026-11-17, #9):**
+  - Q1 find the fun first: ok.
+  - Q2 battles: A, skill shots. Missing is part of the fun; hits and unintuitive trick shots are the reward. Likely grows into C (a limited extra action per turn) later; avoid the word "jump". Limited actions settled in a later round.
+  - Q3 free power (W/S): keep, but it makes shots more predictable than Gunbound; playtest that it's a good departure.
+  - Q4 enemy count varies per battle, 1 to many (StS-style). Swarms you blast out of or mow down with an overpowered build are wanted moments. Some bosses have adds. No cap of 3.
+  - Q5 length: short, exact numbers open. No forced countdown timers in single player. Build and test 1 full act before designing more acts.
+  - Q6: plays in browser / Windows PC when a build is ready.
 
 ## Assumptions (unverified; Research queue)
 - **Assumption:** the discrete-action-per-turn question in `docs/TODO_research.md` can wait until M3; M1 uses classic move-then-shoot turns. *(open)*
