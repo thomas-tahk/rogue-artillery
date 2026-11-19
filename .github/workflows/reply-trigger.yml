@@ -1,0 +1,56 @@
+name: reply-trigger
+
+# The owner's reply on a needs-you issue or PR starts a Claude cloud run.
+# Claude's native GitHub triggers have no comment event, so this bridges to the
+# routine's API trigger. No AI runs here: one curl and one comment.
+#
+# Secrets: CHIEF_ROUTINE_ID (trig_...), CHIEF_ROUTINE_TOKEN (claude.ai/code/routines
+# -> the routine -> Edit -> add API trigger -> Generate token).
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: reply-trigger-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  fire:
+    # Only the owner's replies on items waiting on them, and not Claude's own
+    # comments (they also post as the owner).
+    if: >-
+      github.event.comment.user.login == github.repository_owner &&
+      contains(github.event.issue.labels.*.name, 'needs-you') &&
+      github.event.comment.performed_via_github_app.slug != 'claude'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fire the routine and report back on the thread
+        env:
+          ROUTINE_ID: ${{ secrets.CHIEF_ROUTINE_ID }}
+          ROUTINE_TOKEN: ${{ secrets.CHIEF_ROUTINE_TOKEN }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          COMMENT_API_URL: ${{ github.event.comment.url }}
+          ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -n --arg url "$COMMENT_URL" --arg api "$COMMENT_API_URL" \
+            '{text: "Owner comment: \($url)\nAPI: \($api)"}')
+          status=$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            "https://api.anthropic.com/v1/claude_code/routines/$ROUTINE_ID/fire" \
+            -H "Authorization: Bearer $ROUTINE_TOKEN" \
+            -H "anthropic-beta: experimental-cc-routine-2026-04-01" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "Content-Type: application/json" \
+            -d "$payload") || status=000
+          if [ "$status" != "200" ]; then
+            gh issue comment "$ISSUE" --body "⚠️ Your reply did NOT start Claude (HTTP $status). [Log]($RUN_URL)"
+            exit 1
+          fi
+          gh issue comment "$ISSUE" --body "🤖 Claude started: $(jq -r .claude_code_session_url response.json)"
